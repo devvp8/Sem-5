@@ -1,87 +1,40 @@
-
-class Graph:
-    def __init__(self, adjac_lis):
-        self.adjac_lis = adjac_lis
-    
-    def get_neighbors(self, v):
-        return self.adjac_lis[v]
-    
-    def heuristic(self, n):
-        H = {
-            'S': 15,
-            '1': 14,
-            '2': 10,
-            '3': 8,
-            '4': 12,
-            '5': 10,
-            '6': 10,
-            '7': 0
-        }
-        return H[n]
-    
-    def a_star(self, start, stop):
-        open_list = set([start])
-        closed_list = set([])
-        distance = {} # Distance from Start.
-        distance[start] = 0
-        adjacent_nodes = {} # Adjacent Mapping of all Nodes
-        adjacent_nodes[start] = start
-        
-        while len(open_list) > 0:
-            n = None
-            for v in open_list:
-                if n is None or distance[v] + self.heuristic(v) < distance[n] + self.heuristic(n):
-                    n = v
-            
-            if n is None:
-                print('Path does not exist!')
-                return None
-            
-            if n == stop: # If the current node is the stop, we have found the path
-                reconst_path = []
-                while adjacent_nodes[n] != n:
-                    reconst_path.append(n)
-                    n = adjacent_nodes[n]
-                reconst_path.append(start)
-                reconst_path.reverse()
-                print('\nPath found: {}\n'.format(reconst_path))
-                return reconst_path
-            
-            for (m, weight) in self.get_neighbors(n): # Neighbors of the current node
-                if m not in open_list and m not in closed_list:
-                    open_list.add(m)
-                    adjacent_nodes[m] = n
-                    distance[m] = distance[n] + weight
-                else: # Check if it's quicker to visit n than m
-                    if distance[m] > distance[n] + weight:
-                        distance[m] = distance[n] + weight
-                        adjacent_nodes[m] = n          
-                        if m in closed_list:
-                            closed_list.remove(m)
-                            open_list.add(m)
-            
-            open_list.remove(n) # Since all neighbors are inspected
-            closed_list.add(n)
-            
-            print("OPEN LIST: ", end="")
-            print(open_list)
-            print("CLOSED LIST: ", end="")
-            print(closed_list)
-            print("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
-        
-        print('Path does not exist!')
-        return None
-
-adjacent_list2 = {
-    'S': [('1', 3), ('4', 4)],
-    '1': [('S', 3), ('2', 4), ('4', 5)],
-    '2': [('1', 4), ('3', 4), ('5', 5)],
-    '3': [('2', 4)],
-    '4': [('S', 4), ('1', 5), ('5', 2)],
-    '5': [('4', 2), ('2', 5), ('6', 4)],
-    '6': [('5', 4), ('7', 3)],
-    '7': [('6', 3)],
+adjacent_list = {
+    'S': [('A', 6), ('B', 5), ('C', 10)],
+    'A': [('S', 6), ('E', 6)],
+    'B': [('S', 5), ('D', 7), ('E', 6)],
+    'C': [('S', 10), ('D', 6)],
+    'D': [('B', 7), ('C', 6), ('F', 6)],
+    'E': [('A', 6), ('B', 6), ('F', 4)],
+    'F': [('E', 4), ('D', 6), ('G', 3)],
+    'G': [('F', 3)],
 }
-
-g = Graph(adjacent_list2)
-g.a_star('S', '7')
+heuristic = {'S': 17, 'A': 10, 'B': 13, 'C': 4, 'D': 2, 'E': 4, 'F': 1, 'G': 0}
+def astar(start, destination):
+    closed, opened, distance, parent = [], [start], {start: 0}, {start: start}    
+    while opened:
+        v = min(opened, key=lambda x: distance[x] + heuristic[x]) #sabse paas wala find karo start se
+        if v == destination:
+            path = [v]
+            while parent[v] != v:
+                path.append(parent[v])
+                v = parent[v]
+            path.reverse()
+            print(f"Shortest path found, path: {path}\nDistance: {distance[destination]}")
+            return
+        for (i,j) in adjacent_list[v]:
+            if i not in closed and i not in opened: # i is not visited
+                opened.append(i) 
+                distance[i]=j+distance[v]
+                parent[i]=v
+            else:    
+                if j+distance[v]<distance[i]: # agar aur optimized milta hai toh
+                    distance[i] = j+distance[v]
+                    parent[i]=v
+                    if i in closed: # optimized mila toh closed se nikaal do and open mein daalo for exploring 
+                        closed.remove(i)
+                        opened.append(i)
+        opened.remove(v)
+        closed.append(v)
+        print(f"Open List: {opened}\nClosed List: {closed}")
+    print(f"No path found from source {start} to destination {destination}")
+astar('S', 'G')
